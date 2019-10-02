@@ -18,6 +18,12 @@
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.hartling</groupId>
+			<artifactId>Java8Sandbox</artifactId>
+			<version>1.0.1-SNAPSHOT</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
 		<dependency>
 			<groupId>org.openjfx</groupId>
