@@ -22,10 +22,14 @@ import com.hartling.app.weather.service.HttpUtilsService;
 import com.hartling.app.weather.service.HttpUtilsServiceImpl;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -62,15 +66,46 @@ public class GhcndDailyViewTableView extends Application {
 
 			tableView.getItems().addAll(data);
 
+			// layout
+			BorderPane border = new BorderPane();
+
+			HBox hbox = addHBox();
+//			border.setTop(hbox);
+//			border.setLeft(addVBox());
+
 			VBox vbox = new VBox(tableView);
-			Scene scene = new Scene(vbox);
+			border.setTop(hbox);
+//			border.setTop(vbox);
+			// border.setLeft(addVBox());
+			border.setLeft(vbox);
+
+			// scene
+			// Scene scene = new Scene(vbox);
+			Scene scene = new Scene(border);
 			primaryStage.setScene(scene);
+			primaryStage.setTitle("Weather");
 
 			primaryStage.show();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public HBox addHBox() {
+		HBox hbox = new HBox();
+		hbox.setPadding(new Insets(15, 12, 15, 12));
+		hbox.setSpacing(10);
+		hbox.setStyle("-fx-background-color: #336699;");
+
+		Button buttonCurrent = new Button("Current");
+		buttonCurrent.setPrefSize(100, 20);
+
+		Button buttonProjected = new Button("Projected");
+		buttonProjected.setPrefSize(100, 20);
+		hbox.getChildren().addAll(buttonCurrent, buttonProjected);
+
+		return hbox;
 	}
 
 	private List<GhcndDailyView> getData() throws ClientProtocolException, IOException {
@@ -85,8 +120,8 @@ public class GhcndDailyViewTableView extends Application {
 		String url = String.format("http://localhost:8080/normal/stn/%s", stnId);
 
 		HttpGet get = httpUtilsService.buildGetWithoutProxy(url);
+
 		// add header
-//		get.setHeader("token", ncdcToken);
 		get.setHeader("Accept", "application/json");
 		get.setHeader("Content-type", "application/json");
 
@@ -101,8 +136,6 @@ public class GhcndDailyViewTableView extends Application {
 		System.out.println(jsonFormatted);
 
 		// map to real object
-//		GhcndDataset ghcndData = new 
-//		List<GhcndDailyView> ghcndMapped = (List<GhcndDailyView>) mapper.readValue(json, GhcndDailyView.class);
 		List<GhcndDailyView> ghcndMapped = mapper.readValue(json, new TypeReference<List<GhcndDailyView>>() {
 		});
 
