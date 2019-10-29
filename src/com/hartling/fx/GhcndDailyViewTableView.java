@@ -69,19 +69,20 @@ public class GhcndDailyViewTableView extends Application {
 			}
 
 			// add the data
-
 			tableView.getItems().addAll(data);
 
 			// layout
 			BorderPane border = new BorderPane();
 
 			// fields at top
-			HBox hbox = addHBox();
+			Label testlabel = new Label("test");
+			HBox hbox = addHBox(testlabel);
 
 			// table
 			VBox vbox = new VBox(tableView);
+			vbox.getChildren().add(testlabel);
 			vbox.setPadding(new Insets(10)); // Set all sides to 10
-			vbox.setSpacing(100); // Gap between nodes
+			vbox.setSpacing(10); // Gap between nodes
 			border.setTop(hbox);
 			border.setLeft(vbox);
 
@@ -98,42 +99,37 @@ public class GhcndDailyViewTableView extends Application {
 		}
 	}
 
-	public HBox addHBox() {
+	public HBox addHBox(Label label) {
 		HBox hbox = new HBox();
 		hbox.setPadding(new Insets(15, 12, 15, 12));
 		hbox.setSpacing(10);
-		hbox.setStyle("-fx-background-color: #336699;");
+		hbox.setStyle("-fx-background-color: #A0D9E9;");
 
 		// create a label
-		Label l = new Label("no text");
-		TextField textField = createTextField(hbox, l);
-		DatePicker datePicker = createDatePicker(l);
+		Label stnLabel = new Label("STN:");
+		TextField stnField = createTextField(hbox, stnLabel);
+		Label startDateLabel = new Label("Start:");
+		DatePicker startDatePicker = createDatePicker(stnLabel);
+		Label endDateLabel = new Label("End:");
+		DatePicker endDatePicker = createDatePicker(stnLabel);
 
-		Button buttonCurrent = new Button("Current");
-		buttonCurrent.setPrefSize(100, 20);
+		Button goButton = new Button("Go");
+		goButton.setPrefSize(100, 20);
 
 		// action event
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				l.setText(textField.getText());
+				LocalDate start = startDatePicker.getValue();
+				LocalDate end = endDatePicker.getValue();
+
+				label.setText(stnField.getText() + ", " + start + ", " + end);
 			}
 		};
 
-		buttonCurrent.setOnAction(event);
-
-		Button buttonProjected = new Button("Projected");
-		buttonProjected.setPrefSize(100, 20);
-
-		// action event
-		EventHandler<ActionEvent> dateEvent = new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				l.setText("Date: " + datePicker.getValue());
-			}
-		};
-		buttonProjected.setOnAction(dateEvent);
+		goButton.setOnAction(event);
 
 		// add fields
-		hbox.getChildren().addAll(datePicker, buttonCurrent, buttonProjected);
+		hbox.getChildren().addAll(stnLabel, stnField, startDateLabel, startDatePicker, endDateLabel, endDatePicker, goButton);
 
 		return hbox;
 	}
@@ -210,7 +206,7 @@ public class GhcndDailyViewTableView extends Application {
 		// when enter is pressed
 		b.setOnAction(event);
 
-		hbox.getChildren().addAll(b, l);
+		// hbox.getChildren().addAll(b, l);
 
 		return b;
 	}
