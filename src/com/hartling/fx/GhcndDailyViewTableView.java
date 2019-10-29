@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -22,11 +23,16 @@ import com.hartling.app.weather.service.HttpUtilsService;
 import com.hartling.app.weather.service.HttpUtilsServiceImpl;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -69,14 +75,14 @@ public class GhcndDailyViewTableView extends Application {
 			// layout
 			BorderPane border = new BorderPane();
 
+			// fields at top
 			HBox hbox = addHBox();
-//			border.setTop(hbox);
-//			border.setLeft(addVBox());
 
+			// table
 			VBox vbox = new VBox(tableView);
+			vbox.setPadding(new Insets(10)); // Set all sides to 10
+			vbox.setSpacing(100); // Gap between nodes
 			border.setTop(hbox);
-//			border.setTop(vbox);
-			// border.setLeft(addVBox());
 			border.setLeft(vbox);
 
 			// scene
@@ -98,14 +104,62 @@ public class GhcndDailyViewTableView extends Application {
 		hbox.setSpacing(10);
 		hbox.setStyle("-fx-background-color: #336699;");
 
+		// create a label
+		Label l = new Label("no text");
+		TextField textField = createTextField(hbox, l);
+		DatePicker datePicker = createDatePicker(l);
+
 		Button buttonCurrent = new Button("Current");
 		buttonCurrent.setPrefSize(100, 20);
 
+		// action event
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				l.setText(textField.getText());
+			}
+		};
+
+		buttonCurrent.setOnAction(event);
+
 		Button buttonProjected = new Button("Projected");
 		buttonProjected.setPrefSize(100, 20);
-		hbox.getChildren().addAll(buttonCurrent, buttonProjected);
+
+		// action event
+		EventHandler<ActionEvent> dateEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				l.setText("Date: " + datePicker.getValue());
+			}
+		};
+		buttonProjected.setOnAction(dateEvent);
+
+		// add fields
+		hbox.getChildren().addAll(datePicker, buttonCurrent, buttonProjected);
 
 		return hbox;
+	}
+
+	private DatePicker createDatePicker(Label l) {
+		// create a date picker
+		DatePicker d = new DatePicker();
+
+		// action event
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				// get the date picker value
+				LocalDate i = d.getValue();
+
+				// get the selected date
+				l.setText("Date :" + i);
+			}
+		};
+
+		// show week numbers
+		d.setShowWeekNumbers(true);
+
+		// when datePicker is pressed
+		d.setOnAction(event);
+
+		return d;
 	}
 
 	private List<GhcndDailyView> getData() throws ClientProtocolException, IOException {
@@ -140,6 +194,25 @@ public class GhcndDailyViewTableView extends Application {
 		});
 
 		return ghcndMapped;
+	}
+
+	private TextField createTextField(HBox hbox, Label l) {
+		// create a textfield
+		TextField b = new TextField("initial text");
+
+		// action event
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				l.setText(b.getText());
+			}
+		};
+
+		// when enter is pressed
+		b.setOnAction(event);
+
+		hbox.getChildren().addAll(b, l);
+
+		return b;
 	}
 
 	public static String inputStreamToString(InputStream is) throws IOException {
