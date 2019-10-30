@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
@@ -16,6 +17,8 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -58,7 +61,7 @@ public class GhcndDailyViewTableView extends Application {
 		// layout
 		BorderPane border = new BorderPane();
 
-		// fields at top
+		// label for debugging
 		Label testlabel = new Label("test");
 		HBox hbox = addHBox(testlabel);
 
@@ -73,52 +76,35 @@ public class GhcndDailyViewTableView extends Application {
 		// scene
 //		Scene scene = new Scene(border, 900, 600);
 		Scene scene = new Scene(border);
+
+		// main window
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Weather");
-
 		primaryStage.show();
 	}
 
-	public HBox addHBox(Label label) {
+	/**
+	 * Builds the HBox which contains the stnId, start date and end date
+	 * 
+	 * @param testlabel
+	 * @return
+	 */
+	public HBox addHBox(Label testlabel) {
 		HBox hbox = new HBox();
 		hbox.setPadding(new Insets(15, 12, 15, 12));
 		hbox.setSpacing(10);
 		hbox.setStyle("-fx-background-color: #A0D9E9;");
 
-		// create a label
+		// create stn label and field
 		Label stnLabel = new Label("STN:");
-		TextField stnField = createTextField(hbox, stnLabel);
+		TextField stnField = createTextField(hbox);
+
 		Label startDateLabel = new Label("Start:");
 		DatePicker startDatePicker = createDatePicker(stnLabel);
 		Label endDateLabel = new Label("End:");
 		DatePicker endDatePicker = createDatePicker(stnLabel);
 
-		Button goButton = new Button("Go");
-		goButton.setPrefSize(100, 20);
-
-		// action event
-		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				LocalDate start = startDatePicker.getValue();
-				LocalDate end = endDatePicker.getValue();
-
-				label.setText(stnField.getText() + ", " + start + ", " + end);
-
-				List<GhcndDailyView> data = new ArrayList<>();
-				try {
-					tableView.getItems().clear();
-					data = getData(stnField.getText());
-				} catch (ClientProtocolException e1) {
-					logger.error(e1);
-				} catch (IOException e1) {
-					logger.error(e1);
-				}
-				tableView.getItems().addAll(data);
-
-			}
-		};
-
-		goButton.setOnAction(event);
+		Button goButton = createGoButton(startDatePicker, endDatePicker, stnField, testlabel);
 
 		// add fields
 		hbox.getChildren().addAll(stnLabel, stnField, startDateLabel, startDatePicker, endDateLabel, endDatePicker, goButton);
@@ -126,30 +112,82 @@ public class GhcndDailyViewTableView extends Application {
 		return hbox;
 	}
 
+	private Button createGoButton(DatePicker startDatePicker, DatePicker endDatePicker, TextField stnField, Label testlabel) {
+		Button goButton = new Button("Go");
+		goButton.setPrefSize(100, 20);
+
+		// event handler for go button
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				LocalDate start = startDatePicker.getValue();
+				LocalDate end = endDatePicker.getValue();
+				String stnId = stnField.getText();
+
+				if (StringUtils.isNotEmpty(stnId) && stnId.length() >= 3) {
+					// verify that the start date is before the end date
+					if (start != null && end != null && start.isBefore(end)) {
+
+						stnField.setText(stnId.toUpperCase());
+						testlabel.setText(stnField.getText() + ", " + start + ", " + end);
+
+						List<GhcndDailyView> data = new ArrayList<>();
+						try {
+							tableView.getItems().clear();
+							data = getData(stnField.getText());
+						} catch (ClientProtocolException e1) {
+							logger.error(e1);
+						} catch (IOException e1) {
+							logger.error(e1);
+						}
+						tableView.getItems().addAll(data);
+
+					} else {
+						displayError("Start Date isn't before the End Date");
+					}
+				} else {
+					displayError("Station ID must be at least 3 characters");
+				}
+
+			}
+		};
+
+		goButton.setOnAction(event);
+
+		return goButton;
+	}
+
+	/**
+	 * display an error dialog
+	 * 
+	 * @param msg
+	 */
+	private void displayError(String msg) {
+		var alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Error");
+		alert.setHeaderText("Input Error");
+		alert.setContentText(msg);
+		alert.showAndWait().ifPresent((btnType) -> {
+		});
+	}
+
 	private DatePicker createDatePicker(Label l) {
 		// create a date picker
 		DatePicker d = new DatePicker();
 
-		// action event
-		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				// get the date picker value
-				LocalDate i = d.getValue();
-
-				// get the selected date
-				l.setText("Date :" + i);
-			}
-		};
-
 		// show week numbers
 		d.setShowWeekNumbers(true);
-
-		// when datePicker is pressed
-		d.setOnAction(event);
 
 		return d;
 	}
 
+	/**
+	 * Get the daily data with normals
+	 * 
+	 * @param stnId
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
 	private List<GhcndDailyView> getData(String stnId) throws ClientProtocolException, IOException {
 		ObservedWeatherService weatherService = new ObservedWeatherService();
 		List<GhcndDailyView> ghcndMapped = weatherService.findUsinfoByStn(stnId);
@@ -157,19 +195,9 @@ public class GhcndDailyViewTableView extends Application {
 		return ghcndMapped;
 	}
 
-	private TextField createTextField(HBox hbox, Label l) {
+	private TextField createTextField(HBox hbox) {
 		// create a textfield
 		TextField b = new TextField("KBOS");
-
-		// action event
-		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) {
-				l.setText(b.getText());
-			}
-		};
-
-		// when enter is pressed
-		b.setOnAction(event);
 
 		return b;
 	}

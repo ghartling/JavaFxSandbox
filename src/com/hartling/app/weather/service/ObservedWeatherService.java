@@ -24,7 +24,7 @@ public class ObservedWeatherService {
 		LocalDateTime endDate = startDate.plusDays(10);
 		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		String url = String.format("http://localhost:8080/normal/stn/%s", stnId);
+		String url = String.format("http://localhost:8080/weather/stn/%s", stnId);
 		String json = weatherHttpService.getJson(url);
 
 		// map to real object
