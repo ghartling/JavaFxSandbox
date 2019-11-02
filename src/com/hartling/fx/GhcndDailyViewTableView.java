@@ -3,7 +3,10 @@ package com.hartling.fx;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
@@ -11,9 +14,11 @@ import org.apache.log4j.Logger;
 
 import com.hartling.app.weather.entity.GhcndDailyView;
 import com.hartling.app.weather.service.ObservedWeatherService;
+import com.hartling.fx.controls.AutoCompleteTextField;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -22,6 +27,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -63,6 +69,8 @@ public class GhcndDailyViewTableView extends Application {
 
 		// label for debugging
 		Label testlabel = new Label("test");
+
+		// input fields
 		HBox hbox = addHBox(testlabel);
 
 		// table
@@ -97,7 +105,8 @@ public class GhcndDailyViewTableView extends Application {
 
 		// create stn label and field
 		Label stnLabel = new Label("STN:");
-		TextField stnField = createTextField(hbox);
+//		TextField stnField = createTextField(hbox);
+		TextField stnField = createAutoCompleteTextField();
 
 		Label startDateLabel = new Label("Start:");
 		DatePicker startDatePicker = createDatePicker(stnLabel);
@@ -200,6 +209,24 @@ public class GhcndDailyViewTableView extends Application {
 		TextField b = new TextField("KBOS");
 
 		return b;
+	}
+
+	private AutoCompleteTextField<String> createAutoCompleteTextField() {
+		SortedSet<String> s = new TreeSet<>();
+		s.addAll(Arrays.asList("KBOS", "KMCO", "KMIA"));
+
+		// create a textfield
+		AutoCompleteTextField<String> tf = new AutoCompleteTextField<>(s);
+		tf.getEntryMenu().setOnAction(e -> {
+			((MenuItem) e.getTarget()).addEventHandler(Event.ANY, event -> {
+				if (tf.getLastSelectedObject() != null) {
+					tf.setText(tf.getLastSelectedObject().toString());
+					System.out.println(tf.getLastSelectedObject().toString());
+				}
+			});
+		});
+
+		return tf;
 	}
 
 }
