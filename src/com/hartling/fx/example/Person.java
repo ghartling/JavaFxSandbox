@@ -1,4 +1,4 @@
-package com.hartling.fx;
+package com.hartling.fx.example;
 
 public class Person {
 

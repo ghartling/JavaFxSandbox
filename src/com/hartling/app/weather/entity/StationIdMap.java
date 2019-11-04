@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "id", "stationId", "icaoId", "wbanId", "usaf", "wmoId", "networkCode", "latitude", "longitude", "elevation", "fipsCountryCode", "state", "stationName", "begin", "end" })
-public class StationIdMap {
+public class StationIdMap implements Comparable {
 
 	@JsonProperty("id")
 	private String id;
@@ -207,4 +207,19 @@ public class StationIdMap {
 		this.additionalProperties.put(name, value);
 	}
 
+	@Override
+	public int compareTo(Object o) {
+		if (o instanceof StationIdMap) {
+			StationIdMap m = (StationIdMap) o;
+			return icaoId.compareTo(m.getIcaoId());
+		} else {
+			return 0;
+		}
+	}
+
+	@Override
+	public String toString() {
+		String s = String.format("%-4s %-50s", icaoId, stationName);
+		return s;
+	}
 }

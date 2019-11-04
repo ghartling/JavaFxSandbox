@@ -1,4 +1,4 @@
-package com.hartling.fx;
+package com.hartling.fx.example;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
