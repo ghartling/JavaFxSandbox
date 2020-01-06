@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hartling.BaseTest;
 import com.hartling.app.common.util.CommonUtils;
-import com.hartling.app.weather.entity.GhcndDailyView;
+import com.hartling.app.weather.json.GhcndDailyView;
 import com.hartling.app.weather.service.HttpUtilsService;
 import com.hartling.app.weather.service.HttpUtilsServiceImpl;
 

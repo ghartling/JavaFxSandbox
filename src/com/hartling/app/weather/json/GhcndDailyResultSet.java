@@ -1,4 +1,4 @@
-package com.hartling.app.weather.entity;
+package com.hartling.app.weather.json;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -13,8 +13,10 @@ import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.hartling.app.weather.entity.GhcndDailyView;
-import com.hartling.app.weather.entity.StationIdMap;
+import com.hartling.app.common.util.CommonUtils;
+import com.hartling.app.weather.json.GhcndDailyNormalDetail;
+import com.hartling.app.weather.json.GhcndDailyView;
+import com.hartling.app.weather.json.StationIdMap;
 import com.hartling.app.weather.service.ObservedWeatherService;
 import com.hartling.fx.controls.AutoCompleteTextField;
 
@@ -29,6 +31,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -41,14 +45,27 @@ public class GhcndDailyStnScene {
 	private static final Logger logger = Logger.getLogger(GhcndDailyStnScene.class);
 
 	// create the table
-	private TableView<GhcndDailyView> tableView = new TableView<>();
+	private TableView<GhcndDailyNormalDetail> tableView = new TableView<>();
 	private StationIdMap selectedStationId;
 
 	public Scene build() {
 
 		buildTableColumns();
 
-		// layout
+		// tabbed pane
+		TabPane tabPane = new TabPane();
+
+		Tab tab1 = new Tab("Station", new Label("Show data for a single station"));
+		Tab tab2 = new Tab("Region", new Label("Show data for a single region (state)"));
+		Tab tab3 = new Tab("Station Stats", new Label("Show Detailed Stats for a station"));
+
+		tabPane.getTabs().add(tab1);
+		tabPane.getTabs().add(tab2);
+		tabPane.getTabs().add(tab3);
+
+		tab1.setContent(tableView);
+
+		// border
 		BorderPane border = new BorderPane();
 
 		// label for debugging
@@ -57,8 +74,9 @@ public class GhcndDailyStnScene {
 		// input fields
 		HBox hbox = addHBox(testlabel);
 
-		// table
-		VBox vbox = new VBox(tableView);
+		// layout
+//		VBox vbox = new VBox(tableView);
+		VBox vbox = new VBox(tabPane);
 		vbox.getChildren().add(testlabel);
 		vbox.setPadding(new Insets(10)); // Set all sides to 10
 		vbox.setSpacing(10); // Gap between nodes
@@ -75,7 +93,7 @@ public class GhcndDailyStnScene {
 		// add the columns
 		int i = 0;
 		for (String s : fields) {
-			TableColumn<GhcndDailyView, String> column1 = new TableColumn<>(fields[i]);
+			TableColumn<GhcndDailyNormalDetail, String> column1 = new TableColumn<>(fields[i]);
 			column1.setCellValueFactory(new PropertyValueFactory<>(fields[i]));
 
 			tableView.getColumns().add(column1);
@@ -143,10 +161,15 @@ public class GhcndDailyStnScene {
 						stnField.setText(stnId.toUpperCase());
 						testlabel.setText(stnField.getText() + ", " + start + ", " + end);
 
-						List<GhcndDailyView> data = new ArrayList<>();
+						String startOccurDate = CommonUtils.DATE_TIME_FORMAT_YYYYMMDD.format(start);
+						String endOccurDate = CommonUtils.DATE_TIME_FORMAT_YYYYMMDD.format(end);
+						String stationId = selectedStationId.getStationId();
+
+						List<GhcndDailyNormalDetail> data = new ArrayList<>();
 						try {
 							tableView.getItems().clear();
-							data = getDailyData(stnField.getText());
+							// data = getDailyData(stnField.getText());
+							data = findByStationIdAndOccurDateBetween(stationId, startOccurDate, endOccurDate);
 						} catch (ClientProtocolException e1) {
 							logger.error(e1);
 						} catch (IOException e1) {
@@ -201,9 +224,16 @@ public class GhcndDailyStnScene {
 	 * @throws ClientProtocolException
 	 * @throws IOException
 	 */
-	private List<GhcndDailyView> getDailyData(String stnId) throws ClientProtocolException, IOException {
+	private List<GhcndDailyView> getDailyData(String icaoId) throws ClientProtocolException, IOException {
 		ObservedWeatherService weatherService = new ObservedWeatherService();
-		List<GhcndDailyView> ghcndMapped = weatherService.findUsinfoByStn(stnId);
+		List<GhcndDailyView> ghcndMapped = weatherService.findUsinfoByStn(icaoId);
+
+		return ghcndMapped;
+	}
+
+	private List<GhcndDailyNormalDetail> findByStationIdAndOccurDateBetween(String stnId, String occurDateStart, String occurDateEnd) throws ClientProtocolException, IOException {
+		ObservedWeatherService weatherService = new ObservedWeatherService();
+		List<GhcndDailyNormalDetail> ghcndMapped = weatherService.findByStationIdAndOccurDateBetween(stnId, occurDateStart, occurDateEnd);
 
 		return ghcndMapped;
 	}

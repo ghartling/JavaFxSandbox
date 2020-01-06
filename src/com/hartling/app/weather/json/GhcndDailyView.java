@@ -1,5 +1,5 @@
 
-package com.hartling.app.weather.entity;
+package com.hartling.app.weather.json;
 
 import java.util.HashMap;
 import java.util.Map;

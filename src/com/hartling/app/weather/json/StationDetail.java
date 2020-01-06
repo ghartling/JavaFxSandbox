@@ -1,8 +1,7 @@
-package com.hartling.app.weather.entity;
+package com.hartling.app.weather.json;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,11 +10,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "id", "stationId", "icaoId", "wbanId", "usaf", "wmoId", "networkCode", "latitude", "longitude", "elevation", "fipsCountryCode", "state", "stationName", "begin", "end" })
-public class StationIdMap implements Comparable {
+@JsonPropertyOrder({ "stationId", "icaoId", "wbanId", "usaf", "wmoId", "networkCode", "latitude", "longitude",
+		"elevation", "fipsCountryCode", "state", "stationName", "begin", "end" })
+public class StationDetail {
 
-	@JsonProperty("id")
-	private String id;
 	@JsonProperty("stationId")
 	private String stationId;
 	@JsonProperty("icaoId")
@@ -46,16 +44,6 @@ public class StationIdMap implements Comparable {
 	private String end;
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
-	@JsonProperty("id")
-	public String getId() {
-		return id;
-	}
-
-	@JsonProperty("id")
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	@JsonProperty("stationId")
 	public String getStationId() {
@@ -207,19 +195,4 @@ public class StationIdMap implements Comparable {
 		this.additionalProperties.put(name, value);
 	}
 
-	@Override
-	public int compareTo(Object o) {
-		if (o instanceof StationIdMap) {
-			StationIdMap m = (StationIdMap) o;
-			return icaoId.compareTo(m.getIcaoId());
-		} else {
-			return 0;
-		}
-	}
-
-	@Override
-	public String toString() {
-		String s = String.format("%-4s %-50s", icaoId, stationName);
-		return s;
-	}
 }
