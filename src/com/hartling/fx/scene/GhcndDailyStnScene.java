@@ -63,7 +63,7 @@ public class GhcndDailyStnScene {
 		tabPane.getTabs().add(tab2);
 		tabPane.getTabs().add(tab3);
 
-		tab1.setContent(tableView);
+//		tab1.setContent(tableView);
 
 		// border
 		BorderPane border = new BorderPane();
@@ -72,7 +72,13 @@ public class GhcndDailyStnScene {
 		Label testlabel = new Label("test");
 
 		// input fields
-		HBox hbox = addHBox(testlabel);
+		HBox inputHbox = addHBox(testlabel);
+
+		// daily tab
+		VBox dailyHbox = new VBox();
+		dailyHbox.getChildren().add(inputHbox);
+		dailyHbox.getChildren().add(tableView);
+		tab1.setContent(dailyHbox);
 
 		// layout
 //		VBox vbox = new VBox(tableView);
@@ -80,11 +86,14 @@ public class GhcndDailyStnScene {
 		vbox.getChildren().add(testlabel);
 		vbox.setPadding(new Insets(10)); // Set all sides to 10
 		vbox.setSpacing(10); // Gap between nodes
-		border.setTop(hbox);
-		border.setLeft(vbox);
+
+		HBox mainHbox = new HBox(vbox);
+//		border.setTop(vbox);
+//		border.setTop(hbox);
+//		border.setLeft(vbox);
 
 		// scene
-		return new Scene(border);
+		return new Scene(mainHbox);
 	}
 
 	private void buildTableColumns() {
