@@ -37,7 +37,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -45,12 +44,26 @@ public class GhcndDailyStnScene {
 	private static final Logger logger = Logger.getLogger(GhcndDailyStnScene.class);
 
 	// create the table
-	private TableView<GhcndDailyNormalDetail> tableView = new TableView<>();
+	private TableView<GhcndDailyNormalDetail> stationTableView = new TableView<>();
+	private TableView<GhcndDailyNormalDetail> regionTableView = new TableView<>();
 	private StationIdMap selectedStationId;
+	private SortedSet<StationIdMap> stationList;
+	private SortedSet<String> regionList;
+	private String selectedRegionId;
+
+	private ObservedWeatherService weatherService = new ObservedWeatherService();
 
 	public Scene build() {
+		// load the station list
+		stationList = loadStationList();
 
-		buildTableColumns();
+		// build the region list
+		regionList = loadRegionList();
+		logger.info("number of region = " + regionList.size());
+
+		// init tables
+		buildTableColumns(stationTableView);
+		buildTableColumns(regionTableView);
 
 		// tabbed pane
 		TabPane tabPane = new TabPane();
@@ -63,40 +76,67 @@ public class GhcndDailyStnScene {
 		tabPane.getTabs().add(tab2);
 		tabPane.getTabs().add(tab3);
 
-//		tab1.setContent(tableView);
-
-		// border
-		BorderPane border = new BorderPane();
-
 		// label for debugging
 		Label testlabel = new Label("test");
 
-		// input fields
-		HBox inputHbox = addHBox(testlabel);
+		// station daily data tab
+		VBox stationHbox = buildStationTab(testlabel);
+		tab1.setContent(stationHbox);
 
-		// daily tab
-		VBox dailyHbox = new VBox();
-		dailyHbox.getChildren().add(inputHbox);
-		dailyHbox.getChildren().add(tableView);
-		tab1.setContent(dailyHbox);
+		// region daily data tab
+		VBox regionHbox = buildRegionTab(testlabel);
+		tab2.setContent(regionHbox);
 
-		// layout
-//		VBox vbox = new VBox(tableView);
+		// add tabbed pane and label for debugging
 		VBox vbox = new VBox(tabPane);
 		vbox.getChildren().add(testlabel);
 		vbox.setPadding(new Insets(10)); // Set all sides to 10
 		vbox.setSpacing(10); // Gap between nodes
 
+		// add to main window
 		HBox mainHbox = new HBox(vbox);
-//		border.setTop(vbox);
-//		border.setTop(hbox);
-//		border.setLeft(vbox);
 
 		// scene
 		return new Scene(mainHbox);
 	}
 
-	private void buildTableColumns() {
+	/**
+	 * Creates the UI components for the station tab
+	 * 
+	 * @param testlabel
+	 * @return
+	 */
+	private VBox buildStationTab(Label testlabel) {
+
+		// station daily data tab
+		VBox stationHbox = new VBox();
+
+		// input fields
+		HBox inputHbox = buildStationInputHBox(testlabel);
+		stationHbox.getChildren().add(inputHbox);
+
+		// table of results
+		stationHbox.getChildren().add(stationTableView);
+
+		return stationHbox;
+	}
+
+	private VBox buildRegionTab(Label testlabel) {
+
+		// station daily data tab
+		VBox stationHbox = new VBox();
+
+		// input fields
+		HBox inputHbox = buildRegionInputHBox(testlabel);
+		stationHbox.getChildren().add(inputHbox);
+
+		// table of results
+		stationHbox.getChildren().add(regionTableView);
+
+		return stationHbox;
+	}
+
+	private void buildTableColumns(TableView<GhcndDailyNormalDetail> tableView) {
 		String fields[] = { "stationId", "icaoId", "occurDate", "tmax", "tmin", "prcp", "snow", "normalMax", "normalMin" };
 
 		// add the columns
@@ -118,7 +158,7 @@ public class GhcndDailyStnScene {
 	 * @param testlabel
 	 * @return
 	 */
-	public HBox addHBox(Label testlabel) {
+	public HBox buildStationInputHBox(Label testlabel) {
 		HBox hbox = new HBox();
 		hbox.setPadding(new Insets(15, 12, 15, 12));
 		hbox.setSpacing(10);
@@ -126,7 +166,7 @@ public class GhcndDailyStnScene {
 
 		// create stn label and field
 		Label stnLabel = new Label("STN:");
-		TextField stnField = createAutoCompleteTextField();
+		TextField stnField = createStationAutoCompleteTextField();
 
 		Label startDateLabel = new Label("Start:");
 		LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -134,10 +174,32 @@ public class GhcndDailyStnScene {
 		Label endDateLabel = new Label("End:");
 		DatePicker endDatePicker = createDatePicker(stnLabel, yesterday);
 
-		Button goButton = createGoButton(startDatePicker, endDatePicker, stnField, testlabel);
+		Button goButton = createStationGoButton(startDatePicker, endDatePicker, stnField, testlabel);
 
 		// add fields
 		hbox.getChildren().addAll(stnLabel, stnField, startDateLabel, startDatePicker, endDateLabel, endDatePicker, goButton);
+
+		return hbox;
+	}
+
+	public HBox buildRegionInputHBox(Label testlabel) {
+		HBox hbox = new HBox();
+		hbox.setPadding(new Insets(15, 12, 15, 12));
+		hbox.setSpacing(10);
+		hbox.setStyle("-fx-background-color: #A0D9E9;");
+
+		// create stn label and field
+		Label stnLabel = new Label("Region:");
+		TextField stnField = createRegionAutoCompleteTextField();
+
+		Label occurDateLabel = new Label("Date:");
+		LocalDate yesterday = LocalDate.now().minusDays(1);
+		DatePicker occurDatePicker = createDatePicker(stnLabel, yesterday);
+
+		Button goButton = createRegionGoButton(occurDatePicker, stnField, testlabel);
+
+		// add fields
+		hbox.getChildren().addAll(stnLabel, stnField, occurDateLabel, occurDatePicker, goButton);
 
 		return hbox;
 	}
@@ -151,7 +213,7 @@ public class GhcndDailyStnScene {
 	 * @param testlabel
 	 * @return
 	 */
-	private Button createGoButton(DatePicker startDatePicker, DatePicker endDatePicker, TextField stnField, Label testlabel) {
+	private Button createStationGoButton(DatePicker startDatePicker, DatePicker endDatePicker, TextField stnField, Label testlabel) {
 		Button goButton = new Button("Go");
 		goButton.setPrefSize(100, 20);
 
@@ -176,7 +238,7 @@ public class GhcndDailyStnScene {
 
 						List<GhcndDailyNormalDetail> data = new ArrayList<>();
 						try {
-							tableView.getItems().clear();
+							stationTableView.getItems().clear();
 							// data = getDailyData(stnField.getText());
 							data = findByStationIdAndOccurDateBetween(stationId, startOccurDate, endOccurDate);
 						} catch (ClientProtocolException e1) {
@@ -184,13 +246,57 @@ public class GhcndDailyStnScene {
 						} catch (IOException e1) {
 							logger.error(e1);
 						}
-						tableView.getItems().addAll(data);
+						stationTableView.getItems().addAll(data);
 
 					} else {
 						displayError("Start Date isn't before the End Date");
 					}
 				} else {
 					displayError("Station ID must be at least 3 characters");
+				}
+
+			}
+		};
+
+		goButton.setOnAction(event);
+
+		return goButton;
+	}
+
+	private Button createRegionGoButton(DatePicker startDatePicker, TextField regionField, Label testlabel) {
+		Button goButton = new Button("Go");
+		goButton.setPrefSize(100, 20);
+
+		// event handler for go button
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				LocalDate start = startDatePicker.getValue();
+
+				if (selectedRegionId != null && StringUtils.isNotEmpty(selectedRegionId)) {
+					// verify that the start date is before the end date
+					if (start != null) {
+
+						regionField.setText(selectedRegionId);
+						testlabel.setText(regionField.getText() + ", " + start);
+
+						String startOccurDate = CommonUtils.DATE_TIME_FORMAT_YYYYMMDD.format(start);
+
+						List<GhcndDailyNormalDetail> data = new ArrayList<>();
+						try {
+							regionTableView.getItems().clear();
+							data = findByRegionIdAndOccurDate(selectedRegionId, startOccurDate);
+						} catch (ClientProtocolException e1) {
+							logger.error(e1);
+						} catch (IOException e1) {
+							logger.error(e1);
+						}
+						regionTableView.getItems().addAll(data);
+
+					} else {
+						displayError("Start Date required");
+					}
+				} else {
+					displayError("Region ID must be at least 3 characters");
 				}
 
 			}
@@ -234,7 +340,6 @@ public class GhcndDailyStnScene {
 	 * @throws IOException
 	 */
 	private List<GhcndDailyView> getDailyData(String icaoId) throws ClientProtocolException, IOException {
-		ObservedWeatherService weatherService = new ObservedWeatherService();
 		List<GhcndDailyView> ghcndMapped = weatherService.findUsinfoByStn(icaoId);
 
 		return ghcndMapped;
@@ -247,7 +352,14 @@ public class GhcndDailyStnScene {
 		return ghcndMapped;
 	}
 
-	private SortedSet<StationIdMap> getStationList() {
+	private List<GhcndDailyNormalDetail> findByRegionIdAndOccurDate(String regionId, String occurDate) throws ClientProtocolException, IOException {
+		ObservedWeatherService weatherService = new ObservedWeatherService();
+		List<GhcndDailyNormalDetail> ghcndMapped = weatherService.findByRegionIdAndOccurDate(regionId, occurDate);
+
+		return ghcndMapped;
+	}
+
+	private SortedSet<StationIdMap> loadStationList() {
 		ObservedWeatherService weatherService = new ObservedWeatherService();
 		List<StationIdMap> mapped = new ArrayList<>();
 		SortedSet<StationIdMap> s = new TreeSet<>();
@@ -271,6 +383,30 @@ public class GhcndDailyStnScene {
 		return s;
 	}
 
+	private SortedSet<String> loadRegionList() {
+		ObservedWeatherService weatherService = new ObservedWeatherService();
+		List<String> mapped = new ArrayList<>();
+		SortedSet<String> sortedSet = new TreeSet<>();
+		try {
+			mapped = weatherService.getRegionList();
+
+			for (String id : mapped) {
+				sortedSet.add(id);
+			}
+		} catch (JsonParseException e) {
+			logger.error(e);
+			displayError("unable to parse JSON for the region ID list");
+		} catch (JsonMappingException e) {
+			logger.error(e);
+			displayError("unable to parse JSON for the region ID list");
+		} catch (IOException e) {
+			logger.error(e);
+			displayError("unable to retrieve the region ID list");
+		}
+
+		return sortedSet;
+	}
+
 	private TextField createTextField(HBox hbox) {
 		// create a textfield
 		TextField b = new TextField("KBOS");
@@ -278,12 +414,7 @@ public class GhcndDailyStnScene {
 		return b;
 	}
 
-	private AutoCompleteTextField<StationIdMap> createAutoCompleteTextField() {
-		// SortedSet<String> s = new TreeSet<>();
-		// s.addAll(Arrays.asList("KBOS", "KMCO", "KMIA"));
-
-		SortedSet<StationIdMap> stationList = getStationList();
-		// s.addAll(stationList);
+	private AutoCompleteTextField<StationIdMap> createStationAutoCompleteTextField() {
 
 		// create a textfield
 		AutoCompleteTextField<StationIdMap> tf = new AutoCompleteTextField<>(stationList);
@@ -292,12 +423,57 @@ public class GhcndDailyStnScene {
 				if (tf.getLastSelectedObject() != null) {
 					tf.setText(tf.getLastSelectedObject().toString());
 					selectedStationId = tf.getLastSelectedObject();
-					System.out.println(tf.getLastSelectedObject().toString());
+					logger.info(tf.getLastSelectedObject().toString());
 				}
 			});
 		});
 
 		return tf;
+	}
+
+	private AutoCompleteTextField<String> createRegionAutoCompleteTextField() {
+
+		// create a textfield
+		AutoCompleteTextField<String> tf = new AutoCompleteTextField<>(regionList);
+		tf.getEntryMenu().setOnAction(e -> {
+			((MenuItem) e.getTarget()).addEventHandler(Event.ANY, event -> {
+				if (tf.getLastSelectedObject() != null) {
+					tf.setText(tf.getLastSelectedObject().toString());
+					selectedRegionId = tf.getLastSelectedObject();
+					logger.info(tf.getLastSelectedObject().toString());
+				}
+			});
+		});
+
+		return tf;
+	}
+
+	public TableView<GhcndDailyNormalDetail> getStationTableView() {
+		return stationTableView;
+	}
+
+	public void setStationTableView(TableView<GhcndDailyNormalDetail> stationTableView) {
+		this.stationTableView = stationTableView;
+	}
+
+	public TableView<GhcndDailyNormalDetail> getRegionTableView() {
+		return regionTableView;
+	}
+
+	public void setRegionTableView(TableView<GhcndDailyNormalDetail> regionTableView) {
+		this.regionTableView = regionTableView;
+	}
+
+	public StationIdMap getSelectedStationId() {
+		return selectedStationId;
+	}
+
+	public void setSelectedStationId(StationIdMap selectedStationId) {
+		this.selectedStationId = selectedStationId;
+	}
+
+	public void setStationList(SortedSet<StationIdMap> stationList) {
+		this.stationList = stationList;
 	}
 
 }

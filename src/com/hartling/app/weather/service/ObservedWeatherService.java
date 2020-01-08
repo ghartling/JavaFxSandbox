@@ -47,9 +47,18 @@ public class ObservedWeatherService {
 	}
 
 	public List<GhcndDailyNormalDetail> findByStationIdAndOccurDateBetween(String stnId, String occurDateStart, String occurDateEnd) throws ClientProtocolException, IOException {
-		LocalDateTime today = LocalDateTime.now();
-
 		String url = String.format("http://localhost:8080/weather/daily/stationid/%s/%s/%s", stnId, occurDateStart, occurDateEnd);
+		String json = weatherHttpService.getJson(url);
+
+		// map to real object
+		List<GhcndDailyNormalDetail> ghcndMapped = mapper.readValue(json, new TypeReference<List<GhcndDailyNormalDetail>>() {
+		});
+
+		return ghcndMapped;
+	}
+
+	public List<GhcndDailyNormalDetail> findByRegionIdAndOccurDate(String regionId, String occurDate) throws ClientProtocolException, IOException {
+		String url = String.format("http://localhost:8080/weather/occurdate/regionid/%s/%s", occurDate, regionId);
 		String json = weatherHttpService.getJson(url);
 
 		// map to real object
@@ -66,6 +75,18 @@ public class ObservedWeatherService {
 
 		// map to real object
 		List<StationIdMap> mapped = mapper.readValue(json, new TypeReference<List<StationIdMap>>() {
+		});
+
+		return mapped;
+	}
+
+	public List<String> getRegionList() throws JsonParseException, JsonMappingException, IOException {
+
+		String url = String.format("http://localhost:8080/weather/region/list");
+		String json = weatherHttpService.getJson(url);
+
+		// map to real object
+		List<String> mapped = mapper.readValue(json, new TypeReference<List<String>>() {
 		});
 
 		return mapped;
