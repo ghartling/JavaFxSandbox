@@ -19,14 +19,13 @@ import com.hartling.app.weather.json.GhcndDailyView;
 import com.hartling.app.weather.json.StationIdMap;
 import com.hartling.app.weather.service.ObservedWeatherService;
 import com.hartling.fx.controls.AutoCompleteTextField;
+import com.hartling.fx.util.JavaFxUtils;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -86,6 +85,10 @@ public class GhcndDailyStnScene {
 		// region daily data tab
 		VBox regionHbox = buildRegionTab(testlabel);
 		tab2.setContent(regionHbox);
+
+		// region daily data tab
+		VBox statsHbox = buildRegionTab(testlabel);
+		tab3.setContent(statsHbox);
 
 		// add tabbed pane and label for debugging
 		VBox vbox = new VBox(tabPane);
@@ -249,10 +252,10 @@ public class GhcndDailyStnScene {
 						stationTableView.getItems().addAll(data);
 
 					} else {
-						displayError("Start Date isn't before the End Date");
+						JavaFxUtils.displayError("Start Date isn't before the End Date");
 					}
 				} else {
-					displayError("Station ID must be at least 3 characters");
+					JavaFxUtils.displayError("Station ID must be at least 3 characters");
 				}
 
 			}
@@ -293,10 +296,10 @@ public class GhcndDailyStnScene {
 						regionTableView.getItems().addAll(data);
 
 					} else {
-						displayError("Start Date required");
+						JavaFxUtils.displayError("Start Date required");
 					}
 				} else {
-					displayError("Region ID must be at least 3 characters");
+					JavaFxUtils.displayError("Region ID must be at least 3 characters");
 				}
 
 			}
@@ -305,20 +308,6 @@ public class GhcndDailyStnScene {
 		goButton.setOnAction(event);
 
 		return goButton;
-	}
-
-	/**
-	 * display an error dialog
-	 * 
-	 * @param msg
-	 */
-	private void displayError(String msg) {
-		var alert = new Alert(AlertType.ERROR);
-		alert.setTitle("Error");
-		alert.setHeaderText("Input Error");
-		alert.setContentText(msg);
-		alert.showAndWait().ifPresent((btnType) -> {
-		});
 	}
 
 	private DatePicker createDatePicker(Label l, LocalDate localDate) {
@@ -371,13 +360,13 @@ public class GhcndDailyStnScene {
 			}
 		} catch (JsonParseException e) {
 			logger.error(e);
-			displayError("unable to parse JSON for the station ID list");
+			JavaFxUtils.displayError("unable to parse JSON for the station ID list");
 		} catch (JsonMappingException e) {
 			logger.error(e);
-			displayError("unable to parse JSON for the station ID list");
+			JavaFxUtils.displayError("unable to parse JSON for the station ID list");
 		} catch (IOException e) {
 			logger.error(e);
-			displayError("unable to retrieve the station ID list");
+			JavaFxUtils.displayError("unable to retrieve the station ID list");
 		}
 
 		return s;
@@ -395,13 +384,13 @@ public class GhcndDailyStnScene {
 			}
 		} catch (JsonParseException e) {
 			logger.error(e);
-			displayError("unable to parse JSON for the region ID list");
+			JavaFxUtils.displayError("unable to parse JSON for the region ID list");
 		} catch (JsonMappingException e) {
 			logger.error(e);
-			displayError("unable to parse JSON for the region ID list");
+			JavaFxUtils.displayError("unable to parse JSON for the region ID list");
 		} catch (IOException e) {
 			logger.error(e);
-			displayError("unable to retrieve the region ID list");
+			JavaFxUtils.displayError("unable to retrieve the region ID list");
 		}
 
 		return sortedSet;
