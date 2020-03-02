@@ -1,0 +1,202 @@
+<project name="JavaFxSandbox" default="build" basedir=".">
+
+	<!--
+	https://mkyong.com/ant/ant-create-a-fat-jar-file/
+	
+	-->
+	<!-- ===================== Property Definitions =========================== -->
+	<!-- All properties for the build are read from build.properties -->
+	<property file="build.properties" />
+
+	<!-- build properties -->
+	<property name="app.home" value="." />
+	<property name="lib.dir" value="${app.home}/lib-maven" />
+	<property name="src.dir" value="${app.home}/src" />
+	<property name="build.dir" value="${app.home}/build" />
+	<property name="build.class.dir" value="${build.dir}/classes" />
+	<property name="build.lib.dir" value="${build.dir}/lib" />
+	<property name="dist.dir" value="${app.home}/dist" />
+	<property name="install.dir" value="${app.home}/install" />
+
+	<!-- properties for the unit tests -->
+	<property name="test.dir" value="${app.home}/src-test" />
+	<property name="test.src.dir" value="${test.dir}" />
+	<property name="test.style.dir" value="${test.dir}/style" />
+	<property name="test.build.dir" value="${build.dir}/test" />
+	<property name="test.build.class.dir" value="${test.build.dir}/classes" />
+	<property name="test.lib.dir" value="${build.lib.dir}" />
+	<property name="result.dir" value="${test.build.dir}/result" />
+	<property name="report.dir" value="${test.build.dir}/report" />
+
+	<!-- environment variables -->
+	<property environment="env" />
+
+	<!-- classpath -->
+	<path id="project.class.path">
+		<pathelement location="${build.class.dir}" />
+		<fileset dir="${lib.dir}" />
+	</path>
+	<path id="tests.class.path">
+		<pathelement location="${test.build.class.dir}" />
+	</path>
+
+	<target name="clean" description="Delete Directories">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<antcall target="init" />
+	</target>
+
+	<target name="init" description="create Directories">
+		<mkdir dir="${build.class.dir}" />
+		<mkdir dir="${build.lib.dir}" />
+		<mkdir dir="${test.build.class.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+	<target name="all" depends="clean,build,dist" />
+
+	<!-- compile all of the files -->
+	<target name="build" depends="init,copy-resources">
+		<javac srcdir="${src.dir}" destdir="${build.class.dir}" debug="${compile.debug}" deprecation="${compile.deprecation}" optimize="${compile.optimize}">
+			<classpath refid="project.class.path" />
+		</javac>
+		<javac srcdir="${test.src.dir}" destdir="${test.build.class.dir}" debug="${compile.debug}" deprecation="${compile.deprecation}" optimize="${compile.optimize}">
+			<classpath refid="project.class.path" />
+		</javac>
+	</target>
+
+	<!-- copy resources -->
+	<target name="copy-resources">
+		<copy todir="${build.lib.dir}" overwrite="true">
+			<fileset dir="${lib.dir}" casesensitive="yes">
+				<exclude name="**/ProductVersionAntTask.jar"/>
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/install" overwrite="true">
+			<fileset dir="${install.dir}" casesensitive="yes">
+			</fileset>
+		</copy>
+		<echo message="copy the property files" />
+		<copy todir="${build.class.dir}" overwrite="true">
+			<fileset dir="${src.dir}" casesensitive="yes">
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+		<echo message="copy the property file for the tests" />
+		<copy todir="${test.build.class.dir}" overwrite="true">
+			<fileset dir="${test.src.dir}" casesensitive="yes">
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- create the distribution -->
+	<target name="dist">
+		<tar destfile="${dist.dir}/JavaFxSandbox_${version.number}.tar" basedir="${build.dir}" />
+		<copy todir="${dist.dir}" overwrite="true">
+			<fileset dir="${install.dir}" casesensitive="yes">
+				<include name="JavaFxSandbox_install.sh" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="dist-linux" description="copy tar files to asterisk">
+
+		<echo message="copy the TAR files" />
+		<copy todir="c:/dnload/release" overwrite="true">
+			<fileset dir="${dist.dir}" casesensitive="yes">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- create label -->
+	<!--
+	<target name="createlabel">
+		<echo message="creating label ${source.control.label.name} with comment: ${source.control.label.comment}" />
+		<ccmklbtype typename="${source.control.label.name}" comment="${source.control.label.comment}" />
+	</target>
+	-->
+
+	<!-- apply label -->
+	<!--
+	<target name="applylabel">
+		<echo message="applying label ${source.control.label.name}" />
+		<ccmklabel viewpath="${app.home}" typename="${source.control.label.name}" recurse="true" replace="true" comment="JavaFxSandbox release ${source.control.label.name}" />
+	</target>
+	-->
+
+	<!--
+	<target name="createversion" depends="version, createlabel, applylabel">
+		<echo message="applying label ${source.control.label.name}" />
+		<ccmklabel viewpath="${app.home}" typename="${source.control.label.name}" recurse="true" replace="true" comment="java-fx-sandbox release ${source.control.label.name}" />
+	</target>
+	-->
+
+	<!-- run targets -->
+	<target name="run">
+		<java classname="com.JavaFxSandbox" classpathref="project.class.path">
+			<!-- 
+			<arg value="config\cdrlog.properties" />
+			-->
+		</java>
+
+	</target>
+
+	<!-- unit tests -->
+	<target name="test" description="Unit Tests build and run" depends="build">
+		<property name="test.include.pattern" value="**/*Test.java" />
+		<ant antfile="junit_build.xml" dir="${app.home}" inheritAll="true" inheritRefs="true" />
+	</target>
+
+	<target name="open-report" description="display the report for JavaFxSandbox tests">
+		<ant antfile="junit_build.xml" target="open-report" dir="${app.home}" inheritAll="true" inheritRefs="true" />
+	</target>
+
+	<!-- Target for loading the test data -->
+	<target name="testdata" description="create some sample data for the database">
+		<!-- This defines a single test that will be run and then executes it -->
+		<property name="test.include.pattern" value="**/*Data.java" />
+		<ant antfile="junit_build.xml" dir="${app.home}" inheritAll="true" inheritRefs="true" />
+	</target>
+
+	<!-- create the spec file for the RPM -->
+	<target name="createrpm" description="Creates the spec for the RPM">
+		<!-- get the version number -->
+		<loadfile property="version.number" srcFile="${install.dir}/version.txt" />
+		<property name="java-fx-sandbox.tmp" value="/var/tmp/java-fx-sandbox" />
+		<property name="java-fx-sandbox.install.home" value="/opt/ten/java-fx-sandbox" />
+		<property name="rpm.name" value="java-fx-sandbox" />
+		<property name="tar.file" value="java-fx-sandbox_${version.number}.tar" />
+		<property name="tar.file.path" value="${dist.dir}/${tar.file}" />
+		<property name="zip.file" value="${tar.file}.gz" />
+		<property name="zip.file.path" value="${dist.dir}/${zip.file}" />
+
+		<!-- compress the tar file -->
+		<gzip src="${tar.file.path}" zipfile="${zip.file.path}" />
+
+		<!-- copy the base spec file to one with the correct version -->
+		<property name="rpm.spec" value="${dist.dir}/java-fx-sandbox-${version.number}-1.spec" />
+		<copy tofile="${rpm.spec}" file="rpm/cc.spec" overwrite="true" />
+
+		<!-- insert the correct version and filename in the spec -->
+		<replace file="${rpm.spec}" token="$VERSION" value="${version.number}" />
+		<replace file="${rpm.spec}" token="$CC_TAR_FILE" value="${zip.file}" />
+		<replace file="${rpm.spec}" token="$CC_INSTALL_HOME" value="${java-fx-sandbox.install.home}" />
+		<replace file="${rpm.spec}" token="$CC_TMP" value="${java-fx-sandbox.tmp}" />
+		<replace file="${rpm.spec}" token="$RPM_NAME" value="${rpm.name}" />
+
+		<!-- build the script for creating the rpm -->
+		<property name="rpm.script" value="createrpm.sh" />
+		<copy tofile="${rpm.script}" file="rpm/${rpm.script}" overwrite="true" />
+		<replace file="${rpm.script}" token="$CC_INSTALL_HOME" value="${java-fx-sandbox.tmp}" />
+		<replace file="${rpm.script}" token="$CC_RPM_SPEC" value="${rpm.spec}" />
+
+		<!-- copy to linux for testing -->
+		<property name="linux.dir" value="x:/rpm/java-fx-sandbox" />
+		<copy file="${rpm.script}" todir="${linux.dir}" />
+		<copy file="${rpm.spec}" todir="${linux.dir}/dist" />
+		<copy file="dist/${zip.file}" todir="${linux.dir}/dist" />
+	</target>
+
+</project>

@@ -1,0 +1,96 @@
+<!--
+	* Copyright (c) 2006 ThinkEngine Networks Inc.
+	* Company Confidential.
+	* All Rights Reserved.
+-->
+<project name="VSRLogger Unit Tests" default="test" basedir=".">
+
+	<target name="init" description="Delete and re-create result and report Directories">
+		<mkdir dir="${result.dir}" />
+		<mkdir dir="${report.dir}" />
+	</target>
+
+	<target name="build" description="Build all of the files" depends="init">
+		<echo message="Building the tests" />
+		<javac srcdir="${test.src.dir}" destdir="${test.build.class.dir}" debug="${compile.debug}" deprecation="${compile.deprecation}" optimize="${compile.optimize}">
+			<classpath refid="tests.class.path" />
+			<classpath refid="project.class.path" />
+		</javac>
+	</target>
+
+	<target name="test" description="Unit Tests run and generate report" depends="run, report">
+	</target>
+
+	<target name="run" description="Run all JUnit tests" depends="build">
+
+		<junit printsummary="withOutAndErr" haltonfailure="no" showoutput="yes">
+			<classpath refid="project.class.path" />
+			<classpath refid="tests.class.path" />
+
+			<formatter type="xml" />
+
+			<!-- Use the test element so that tests can be run individually.
+				The syntax is ant test -Dtestcase=<fully qualified class name>
+			-->
+			<test name="${testcase}" todir="${result.dir}" if="testcase" />
+
+			<batchtest fork="yes" todir="${result.dir}" unless="testcase">
+				<fileset dir="${test.src.dir}">
+					<include name="${test.include.pattern}" />
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<!--
+		The "report" target displays the results from the ${result.dir} folder
+		in a web browser.
+	-->
+	<target name="report" description="Reports the results of the tests">
+
+		<junitreport todir="${report.dir}">
+			<fileset dir="${result.dir}">
+				<include name="TEST-*.xml" />
+				<include name="UNITTEST-*.xml" />
+			</fileset>
+			<report format="frames" styledir="${test.style.dir}" todir="${report.dir}" />
+		</junitreport>
+
+		<!-- Start web browser and open report for on supported OS for convenience -->
+		<echo message="open the report in the browser">
+		</echo>
+		<antcall target="open-report">
+		</antcall>
+
+	</target>
+
+	<target name="open-report" description="opens the report in the browser">
+		<exec executable="cmd" os="Windows 2000,Windows XP">
+			<arg value="/c" />
+			<arg file="${report.dir}/index.html" />
+		</exec>
+		<exec executable="firefox" os="Linux">
+			<arg file="${report.dir}/index.html" />
+		</exec>
+	</target>
+
+	<!-- Test docs -->
+	<target name="javadocs">
+		<delete dir="javadocs" failonerror="false" />
+		<mkdir dir="javadocs" />
+		<echo message="Generating Doc for ${ant.project.name}" />
+
+		<javadoc destdir="javadocs" packagenames="com.thinkengine.*" private="true" author="true" version="true" use="true" windowtitle="ThinkEngine Unit Test Documentation" header="&lt;b&gt;ThinkEngine, Inc.&lt;/b&gt;" bottom="Copyright (&amp;copy;) 2006 ThinkEngine Inc. All Rights Reserved." Doctitle="ThinkEngine Unit Test Framework Java Documentation v1.0" serialwarn="false">
+			<fileset dir="${test.src.dir}">
+				<include name="**/*.java" />
+			</fileset>
+			<doctitle>
+				<![CDATA[<h1>VSR</h1>]]>
+			</doctitle>
+		<bottom>
+			<![CDATA[<i>Copyright &#169; 2006 ThinkEngine Inc.</i>]]>
+			</bottom>
+</javadoc>
+</target>
+
+</project>
