@@ -104,7 +104,7 @@ public class MouseMoveScene {
 		rightHBox.getChildren().add(statusField);
 
 		// button
-		Button goButton = createGoButton();
+		Button goButton = createStartButton();
 		Button stopButton = createStopButton();
 		HBox buttonHBox = buildHBox();
 		buttonHBox.getChildren().addAll(goButton, stopButton);
@@ -136,7 +136,7 @@ public class MouseMoveScene {
 				while (true) {
 
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(60000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -242,8 +242,8 @@ public class MouseMoveScene {
 	 * 
 	 * @return
 	 */
-	private Button createGoButton() {
-		Button goButton = new Button("Go");
+	private Button createStartButton() {
+		Button goButton = new Button("Start");
 		goButton.setPrefSize(100, 20);
 
 		// event handler for go button
